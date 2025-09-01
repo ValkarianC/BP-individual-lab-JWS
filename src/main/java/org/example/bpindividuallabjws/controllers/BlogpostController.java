@@ -26,14 +26,14 @@ public class BlogpostController {
     @GetMapping("/posts")
     @ResponseBody
     public ResponseEntity<List<Blogpost>> getAllBlogposts(){
-        return new ResponseEntity<>(blogpostService.getAllBlogposts(), HttpStatus.FOUND);
+        return new ResponseEntity<>(blogpostService.getAllBlogposts(), HttpStatus.OK);
     }
 
     //Get Specific Blogpost     (Requires Authentication)
     @GetMapping("/post/{id}")
     @ResponseBody
     public ResponseEntity<Blogpost> getSpecificBlogpost(@PathVariable("id")Long id){
-        return new ResponseEntity<>(blogpostService.getSpecificBlogpost(id), HttpStatus.FOUND);
+        return new ResponseEntity<>(blogpostService.getSpecificBlogpost(id), HttpStatus.OK);
     }
 
     //Create New Blogpost       (Requires USER role)

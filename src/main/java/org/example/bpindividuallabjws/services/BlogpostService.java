@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BlogpostService implements BlogpostServiceInterface{
@@ -24,26 +25,27 @@ public class BlogpostService implements BlogpostServiceInterface{
 
         @Override
         public Blogpost getSpecificBlogpost(Long id) {
-                return null;
+                Optional<Blogpost> retrievedBlogpost = blogpostRepository.findById(id);
+                return retrievedBlogpost.get();
         }
 
         @Override
         public Blogpost createBlogpost(Blogpost blogpost) {
-                return null;
+                return blogpostRepository.save(blogpost);
         }
 
         @Override
         public Blogpost updateBlogpost(Blogpost blogpost) {
-                return null;
+                return blogpostRepository.save(blogpost);
         }
 
         @Override
         public void deleteBlogpostByID(Long id) {
-
+                blogpostRepository.deleteById(id);
         }
 
         @Override
         public Long getNumberOfBlogposts() {
-                return 0L;
+                return blogpostRepository.count();
         }
 }
