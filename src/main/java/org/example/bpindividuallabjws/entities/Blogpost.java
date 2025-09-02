@@ -6,23 +6,22 @@ import jakarta.persistence.*;
 public class Blogpost {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @Column(length = 40, nullable = false)
     private String creator;
 
     @Column(length = 255, nullable = false)
-    private String blogpost;
+    private String content;
 
     public Blogpost() {
     }
 
-    public Blogpost(Long id, String creator, String blogpost) {
+    public Blogpost(Long id, String creator, String content) {
         this.id = id;
         this.creator = creator;
-        this.blogpost = blogpost;
+        this.content = content;
     }
 
     public Long getId() {
@@ -41,11 +40,11 @@ public class Blogpost {
         this.creator = creator;
     }
 
-    public String getBlogpost() {
-        return blogpost;
+    public String getContent() {
+        return content;
     }
 
-    public void setBlogpost(String blogpost) {
-        this.blogpost = blogpost;
+    public void setContent(String content) {
+        this.content = content;
     }
 }

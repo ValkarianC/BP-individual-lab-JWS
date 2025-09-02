@@ -1,6 +1,7 @@
 package org.example.bpindividuallabjws.controllers;
 
 import org.example.bpindividuallabjws.entities.Blogpost;
+import org.example.bpindividuallabjws.exceptions.InvalidUserException;
 import org.example.bpindividuallabjws.services.BlogpostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,15 +26,20 @@ public class BlogpostController {
     //Get All Blogposts         (Requires Authentication)
     @GetMapping("/posts")
     @ResponseBody
-    public ResponseEntity<List<Blogpost>> getAllBlogposts(){
-        return new ResponseEntity<>(blogpostService.getAllBlogposts(), HttpStatus.OK);
+    public ResponseEntity<Object> getAllBlogposts(){
+        List<Blogpost> blogposts = blogpostService.getAllBlogposts();
+        if (blogposts.isEmpty()){
+            return new ResponseEntity<>("No blog posts in database", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(blogpostService.getAllBlogposts(), HttpStatus.FOUND);
+        }
     }
 
     //Get Specific Blogpost     (Requires Authentication)
     @GetMapping("/post/{id}")
     @ResponseBody
     public ResponseEntity<Blogpost> getSpecificBlogpost(@PathVariable("id")Long id){
-        return new ResponseEntity<>(blogpostService.getSpecificBlogpost(id), HttpStatus.OK);
+        return new ResponseEntity<>(blogpostService.getSpecificBlogpost(id), HttpStatus.FOUND);
     }
 
     //Create New Blogpost       (Requires USER role)
@@ -47,15 +53,25 @@ public class BlogpostController {
     @PutMapping("/updatepost")
     @ResponseBody
     public ResponseEntity<Blogpost> updateBlogpost(@RequestBody Blogpost blogpost){
-        return new ResponseEntity<>(blogpostService.updateBlogpost(blogpost), HttpStatus.ACCEPTED);
+        if (blogpost.getCreator().equals("TEST")) {  //TODO: Replace TEST with logged in username
+            return new ResponseEntity<>(blogpostService.updateBlogpost(blogpost), HttpStatus.ACCEPTED);
+        } else {
+            throw new InvalidUserException("TEST", "EDIT/UPDATE", "Blogpost");
+        }
     }
 
-    //Delete Blogpost           (Requires USER, user must match owner of blogpost)
+    //Delete Blogpost           (Requires USER -> USER must match owner of blogpost, or must be ADMIN)
     @DeleteMapping("/deletepost/{id}")
     @ResponseBody
     public ResponseEntity<String> deleteBlogpost(@PathVariable("id")Long id){
-        blogpostService.deleteBlogpostByID(id);
-        return new ResponseEntity<>(("Blog post w/ ID : " + id + " | Status: Deleted"), HttpStatus.OK);
+
+        if (blogpostService.getSpecificBlogpost(id).getCreator().equals("TEST")) {  //TODO: Replace TEST with logged in username
+            blogpostService.deleteBlogpostByID(id);
+            return new ResponseEntity<>(("Blog post w/ ID : " + id + " | Status: Deleted"), HttpStatus.OK);
+        } else {
+            throw new InvalidUserException("TEST", "DELETE", "Blogpost");
+        }
+
     }
 
     //ADMIN ENDPOINTS
