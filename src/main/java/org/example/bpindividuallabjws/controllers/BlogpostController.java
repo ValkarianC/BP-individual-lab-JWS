@@ -1,20 +1,27 @@
 package org.example.bpindividuallabjws.controllers;
 
 import org.example.bpindividuallabjws.entities.Blogpost;
-import org.example.bpindividuallabjws.exceptions.InvalidUserException;
 import org.example.bpindividuallabjws.services.BlogpostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v2")
 public class BlogpostController {
 
     private final BlogpostService blogpostService;
+
+    @Value("${jwt.auth.converter.resource-id.name}")
+    private String securityResourceId;
 
     @Autowired
     public BlogpostController(BlogpostService blogpostService){
@@ -45,33 +52,27 @@ public class BlogpostController {
     //Create New Blogpost       (Requires USER role)
     @PostMapping("/newpost")
     @ResponseBody
-    public ResponseEntity<Blogpost> createNewBlogpost(@RequestBody Blogpost blogpost){
+    public ResponseEntity<Blogpost> createNewBlogpost(@RequestBody Blogpost blogpost, @AuthenticationPrincipal Jwt jwt){
+        blogpost.setCreator(jwt.getClaimAsString("preferred_username"));
         return new ResponseEntity<>(blogpostService.createBlogpost(blogpost), HttpStatus.CREATED);
     }
 
     //Update Blogpost           (Requires USER, USER must match owner of blogpost)
     @PutMapping("/updatepost")
     @ResponseBody
-    public ResponseEntity<Blogpost> updateBlogpost(@RequestBody Blogpost blogpost){
-        if (blogpost.getCreator().equals("TEST")) {  //TODO: Replace TEST with logged in username
-            return new ResponseEntity<>(blogpostService.updateBlogpost(blogpost), HttpStatus.ACCEPTED);
-        } else {
-            throw new InvalidUserException("TEST", "EDIT/UPDATE", "Blogpost");
-        }
+    public ResponseEntity<Blogpost> updateBlogpost(@RequestBody Blogpost blogpost, @AuthenticationPrincipal Jwt jwt){
+        String username = jwt.getClaimAsString("preferred_username");
+        return new ResponseEntity<>(blogpostService.updateBlogpost(blogpost, username), HttpStatus.ACCEPTED);
     }
 
     //Delete Blogpost           (Requires USER -> USER must match owner of blogpost, or must be ADMIN)
     @DeleteMapping("/deletepost/{id}")
     @ResponseBody
-    public ResponseEntity<String> deleteBlogpost(@PathVariable("id")Long id){
-
-        if (blogpostService.getSpecificBlogpost(id).getCreator().equals("TEST")) {  //TODO: Replace TEST with logged in username
-            blogpostService.deleteBlogpostByID(id);
-            return new ResponseEntity<>(("Blog post w/ ID : " + id + " | Status: Deleted"), HttpStatus.OK);
-        } else {
-            throw new InvalidUserException("TEST", "DELETE", "Blogpost");
-        }
-
+    public ResponseEntity<String> deleteBlogpost(@PathVariable("id")Long id, @AuthenticationPrincipal Jwt jwt){
+        String username = jwt.getClaimAsString("preferred_username");
+        boolean admin = verifyAdmin(jwt);
+        blogpostService.deleteBlogpostByID(id, username, admin);
+        return new ResponseEntity<>(("Blog post w/ ID : " + id + " | Status: Deleted"), HttpStatus.OK);
     }
 
     //ADMIN ENDPOINTS
@@ -83,4 +84,21 @@ public class BlogpostController {
         Long numOfBlogposts = blogpostService.getNumberOfBlogposts();
         return new ResponseEntity<>(("Total number of blog posts : "+ numOfBlogposts), HttpStatus.OK);
     }
+
+
+    private boolean verifyAdmin(Jwt jwt){
+        boolean isAdmin = false;
+        Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
+        if (resourceAccess.containsKey(securityResourceId)){
+            Map<String, Object> resourceData = (Map<String, Object>) resourceAccess.get(securityResourceId);
+            if (resourceData.containsKey("roles")){
+                ArrayList<String> roles = (ArrayList<String>) resourceData.get("roles");
+                if (roles.contains("admin")){
+                    isAdmin = true;
+                }
+            }
+        }
+        return isAdmin;
+    }
+
 }

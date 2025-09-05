@@ -9,8 +9,8 @@ public interface BlogpostServiceInterface {
     List<Blogpost> getAllBlogposts();
     Blogpost getSpecificBlogpost(Long id);
     Blogpost createBlogpost(Blogpost blogpost);
-    Blogpost updateBlogpost(Blogpost blogpost);
-    void deleteBlogpostByID(Long id);
+    Blogpost updateBlogpost(Blogpost blogpost, String username);
+    void deleteBlogpostByID(Long id, String username, boolean admin);
 
     //ADMIN
     Long getNumberOfBlogposts(); //TODO: check what is needed for "count" endpoint
