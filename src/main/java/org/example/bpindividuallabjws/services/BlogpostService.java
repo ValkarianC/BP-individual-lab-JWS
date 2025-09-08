@@ -79,7 +79,7 @@ public class BlogpostService implements BlogpostServiceInterface{
                         blogpostRepository.deleteById(id);
                         System.out.println("Blogpost with ID: "+ blogpostToDelete.get().getId() + ", deleted by "+ (admin? "ADMIN["+username: "OWNER["+username)+"]");
                 } else {
-                        throw new InvalidUserException(username, "DELETE", "Blogpost by" + blogpostToDelete.get().getCreator());
+                        throw new InvalidUserException(username, "DELETE", "Blogpost");
                 }
         }
 
